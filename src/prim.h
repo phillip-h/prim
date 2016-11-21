@@ -1,5 +1,5 @@
-#ifndef __PRIMUS__
-#define __PRIMUS__
+#ifndef __PRIM__
+#define __PRIM__
 
 #include <stdint.h>
 #include <stdlib.h>
