@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define S_SIEVE_SIZE 65536
+
 typedef struct bitset {
     size_t len;
     uint8_t *data;
@@ -26,8 +28,28 @@ void set_prim_error_callback(void (*callback)(char*)) {
     error_callback = callback;
 }
 
+uint64_t* PRIM_INTERNAL_PRIME_BUF = NULL;
+size_t PRIM_INTERNAL_PRIME_POS = 0;
+void PRIM_SIEVE_CALLBACK(uint64_t prime) {
+    PRIM_INTERNAL_PRIME_BUF[PRIM_INTERNAL_PRIME_POS++] = prime;
+}
 uint64_t* prime_sieve(uint64_t max, size_t *len) {
-    return eratosthenes(max, len);
+    if (max < S_SIEVE_SIZE) {
+        return atkin(max, len);
+    }
+
+    uint64_t *backup_buf = PRIM_INTERNAL_PRIME_BUF;
+    size_t backup_pos = PRIM_INTERNAL_PRIME_POS;
+
+    PRIM_INTERNAL_PRIME_BUF = palloc(primes_below(max) * sizeof(uint64_t));
+    PRIM_INTERNAL_PRIME_POS = 0;
+    segmented_sieve(max, &PRIM_SIEVE_CALLBACK);
+
+    uint64_t *primes = PRIM_INTERNAL_PRIME_BUF;
+    *len = PRIM_INTERNAL_PRIME_POS;
+    PRIM_INTERNAL_PRIME_BUF = backup_buf;
+    PRIM_INTERNAL_PRIME_POS = backup_pos;
+    return primes;
 }
 
 const uint8_t atkin_test_one[60] = {
@@ -183,6 +205,74 @@ end:
     return primes;
 }
 
+void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
+    size_t limit = sqrt((double) max) + 1;
+    size_t len_sp = 0;
+    uint64_t *small_primes = prime_sieve(limit, &len_sp);
+
+    bitset *sieve = bitset_new(S_SIEVE_SIZE + 1);
+
+    uint64_t *sieve_primes = palloc(limit * sizeof(uint64_t));
+    uint64_t *offsets = palloc(limit * sizeof(uint64_t));
+    size_t num_sieve = 0;
+
+    uint64_t small = 2;
+    uint64_t candidate = 3; 
+
+    (*callback)(2);
+
+    // calculate sieve end condition
+    uint64_t end = ceil(((double) max / S_SIEVE_SIZE)) * S_SIEVE_SIZE;
+    for (size_t pos = 0; pos < end; pos += S_SIEVE_SIZE) {
+        bitset_one(sieve);
+
+        // calculate the upper boundary
+        uint64_t pos_h = pos + S_SIEVE_SIZE - 1;
+        if (pos_h > max) pos_h = max;
+
+        // add any new small primes to the sieve vec
+        while (small * small <= pos_h) {
+            for (size_t i = num_sieve; i < len_sp; ++i) {
+                if (small_primes[i] == small) {
+                    sieve_primes[num_sieve] = small;
+                    offsets[num_sieve] = small * small - pos;
+                    ++num_sieve;
+                } else if (small_primes[i] > small) {
+                    break;
+                }
+            }
+
+            ++small;
+        }
+
+        // preform the sieve
+        for (size_t i = 1; i < num_sieve; ++i) {
+            uint64_t j = offsets[i];
+            uint64_t k = sieve_primes[i] * 2;
+
+            while (j < S_SIEVE_SIZE) {
+                bitset_set(sieve, j, 0);
+                j += k;
+            }
+            offsets[i] = j - S_SIEVE_SIZE;
+        }
+
+        // collect primes, call the callback expression
+        while (candidate <= pos_h) {
+            if (bitset_read(sieve, candidate - pos)) {
+                (*callback)(candidate);
+            }
+
+            candidate += 2;
+        }
+
+    }
+}
+
+/*
+ * Internal Functions
+ */
+
 size_t primes_below(uint64_t n) {
     return (size_t) ceil(1.25506 * (double) n / log(n));
 }
@@ -197,6 +287,10 @@ void* palloc(size_t len) {
 
     return block;
 }
+
+/*
+ * bitset functions
+ */
 
 bitset* bitset_new(size_t size) {
     bitset *bits = palloc(sizeof(*bits));

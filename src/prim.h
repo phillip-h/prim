@@ -12,5 +12,6 @@ uint64_t* prime_sieve(uint64_t max, size_t *len);
 
 uint64_t* atkin(uint64_t max, size_t *len);
 uint64_t* eratosthenes(uint64_t max, size_t *len);
+void segmented_sieve(uint64_t max, void(*callback)(uint64_t));
 
 #endif

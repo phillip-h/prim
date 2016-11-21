@@ -98,6 +98,19 @@ int main() {
 
     end_section();
 
+    new_section("segmented sieve");
+
+    t_arrays(prime_sieve(2, &len), two, 1);
+    t_arrays(prime_sieve(3, &len), three, 2);
+    t_arrays(prime_sieve(5, &len), five, 3);
+    t_arrays(prime_sieve(10, &len), ten, 4);
+    t_len(prime_sieve(100, &len), 25);
+    t_len(prime_sieve(1000, &len), 168);
+    t_len(prime_sieve(1000000, &len), 78498);
+    t_len(prime_sieve(10000000, &len), 664579);
+
+    end_section();
+
     printf("\nRan %d tests\n", tests);
     if (passed == tests) {
         printf("\x1b[1;32mAll Tests Passed!\x1b[0m\n");
