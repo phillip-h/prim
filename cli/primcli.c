@@ -1,5 +1,7 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <getopt.h> 
 
@@ -8,9 +10,24 @@
 const int EXIT_OK = 0;
 const int EXIT_BAD_ARGS = -1;
 
+bool custom_sep = false;
+char *sep = "\n";
+
+char* parse_sep(const char *str);
+void print_prime(uint64_t prime);
+
 void help(void);
 void version(void);
 
+/*
+ * CLI interface for generating prime numbers. Parses the first
+ * argument as an upper bound, then runs segmented_sieve() with
+ * callback to print each prime to stdout. The default separator
+ * between primes is a newline '\n' character, this can be changed
+ * to an arbitrary string through the '-s' argument. The only escape
+ * characters the separator can have are tabs '\t' newlines '\n' and
+ * backslashes '\\'.
+ */
 int main(int argc, char **argv) {
     if (argc < 2) {
         printf("invalid arguments.\n");
@@ -18,7 +35,7 @@ int main(int argc, char **argv) {
         return EXIT_BAD_ARGS;
     }
 
-    char *sep = "\n";
+    uint64_t max = strtol(argv[1], NULL, 10);
 
     int c = '\0';
     while ((c = getopt(argc, argv, "hvs:")) != -1) {
@@ -30,29 +47,70 @@ int main(int argc, char **argv) {
                 version();
                 return EXIT_OK;
             case 's':
-               sep = optarg;
+                if (custom_sep) free(sep);
+                sep = parse_sep(optarg);
+                custom_sep = true;
                break;
             case '?':
             case ':':
-               return EXIT_BAD_ARGS;
             default:
-                printf("unknown argument '%c'\n", c);
-                return EXIT_BAD_ARGS;
+               if (optind != 1) {
+                   printf("unknown argument '%c'\n", c);
+                   return EXIT_BAD_ARGS;
+               }
         }
     }
 
-    uint64_t max = strtol(argv[argc - 1], NULL, 10);
-    size_t len = 0;
-    uint64_t *primes = prime_sieve(max, &len);
-    for (size_t i = 0; i < len; ++i)
-        printf("%zu%s", primes[i], sep);
-    printf("\n");
+    segmented_sieve(max, &print_prime);
 
+    if (custom_sep) free(sep);
     return EXIT_OK;
 }
 
+/*
+ * parse '\t', '\n', and '\\' escape characters into a new string.
+ */
+char* parse_sep(const char *str) {
+    char *outstr = malloc((strlen(str) + 1) * sizeof(char));
+    char *out = outstr;
+    bool escape = false;
+    char c = 0;
+    while ((c = *str++) != '\0') {
+        if (escape) {
+            escape = false;
+            switch (c) {
+                case 'n':
+                    *out++ = '\n';
+                    break;
+                case 't':
+                    *out++ = '\t';
+                    break;
+                case '\\':
+                    *out++ = '\\';
+                    break;
+                default:
+                    printf("Warning -- unknown escape character '%c'.\n", c);
+                    break;
+            }
+        } else {
+            escape = (c == '\\');
+            if (!escape) *out++ = c;
+        }
+    }
+
+    *out = '\0';
+    return outstr;
+}
+
+/*
+ *  callback for segmented_sieve()
+ */
+void print_prime(uint64_t prime) {
+    printf("%zu%s", prime, sep);
+}
+
 void help(void) {
-    printf("usage: prim [args] MAX\n");
+    printf("usage: prim MAX [args]\n");
     printf("\n");
     printf("args:\n");
     printf("-s STR   \tset the separator string\n");
