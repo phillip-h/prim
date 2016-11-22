@@ -198,8 +198,7 @@ uint64_t* atkin(uint64_t max, size_t *len) {
     index = 3;
     for (size_t i = 0; i <= max; ++i) {
         if (bitset_read(sieve, i)) {
-            primes[index] = i;
-            index++;
+            primes[index++] = i;
         }
     }
 
@@ -250,8 +249,7 @@ uint64_t* eratosthenes(uint64_t max, size_t *len) {
     while (pos <= max) {
         if (bitset_read(sieve, pos)) {
             /* _pos_ is a prime, add it to the results array */
-            primes[ind] = pos;
-            ind += 1;
+            primes[ind++] = pos;
 
             /* mark multiples of this prime as composite */
             for (size_t j = pos * 2; j <= max; j += pos) {
@@ -284,6 +282,7 @@ void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
     size_t limit = sqrt((double) max) + 1;
     size_t len_sp = 0;
     uint64_t *small_primes = prime_sieve(limit, &len_sp);
+    if (!small_primes) return;
 
     /* 
      * construct an array of offsets and a value to keep track of
@@ -292,10 +291,12 @@ void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
      *  of the current segment).
      */
     uint64_t *offsets = palloc(limit * sizeof(uint64_t));
+    if (!offsets) goto fail_offsets;
     size_t num_sieve = 0;
 
     /* construct the sieve */
     bitset *sieve = bitset_new(S_SIEVE_SIZE + 1);
+    if (!sieve) goto fail_sieve;
 
 
     /* the current small prime and the current "candidate" prime */
@@ -362,10 +363,12 @@ void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
 
     }
 
-    /* cleanup */
+    /* cleanup and labels for allocation failure goto's*/
     bitset_free(sieve);
-    free(small_primes);
+fail_sieve:
     free(offsets);
+fail_offsets:
+    free(small_primes);
 }
 
 /*
