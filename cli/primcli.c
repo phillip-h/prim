@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
             case ':':
             default:
                if (optind != 1) {
-                   printf("unknown argument '%c'\n", c);
                    return EXIT_BAD_ARGS;
                }
         }
