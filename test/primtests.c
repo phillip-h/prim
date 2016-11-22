@@ -2,6 +2,10 @@
 
 #include "prim.h"
 
+/*
+ * Unit Tests
+ */
+
 #define t_arrays(statement, expected, expected_len) do { \
     primes = statement; \
     char *cmp = cmp_arrays(primes, expected, len, expected_len); \
