@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/***************************
+ * _prim_ public interface *
+ ***************************/
+
 /* current library version */
 #define PRIM_VERSION "0.1"
 
