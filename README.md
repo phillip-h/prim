@@ -1,5 +1,7 @@
 # prim
 
+[![](https://travis-ci.org/phillip-h/reikna.svg?branch=master)](https://travis-ci.org/phillip-h/prim)
+
 Lightweight primes Sieve in C
 
 # about
