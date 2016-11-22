@@ -59,14 +59,21 @@ uint64_t* prime_sieve(uint64_t max, size_t *len) {
     uint64_t *backup_buf = PRIM_INTERNAL_PRIME_BUF;
     size_t backup_pos = PRIM_INTERNAL_PRIME_POS;
 
-    /* run the segmented sieve */
-    PRIM_INTERNAL_PRIME_BUF = palloc(primes_below(max) * sizeof(uint64_t));
+    /* construct the results array */
     PRIM_INTERNAL_PRIME_POS = 0;
+    PRIM_INTERNAL_PRIME_BUF = palloc(primes_below(max) * sizeof(uint64_t));
+    if (!PRIM_INTERNAL_PRIME_BUF) goto fail;
+
+    /* run the segmented sieve */
     segmented_sieve(max, &PRIM_SIEVE_CALLBACK);
 
+
+    /* jump to here on failure to allocate results array */
+fail:
+
     /* swap state back to how it was at the start of this routine */
-    uint64_t *primes = PRIM_INTERNAL_PRIME_BUF;
     *len = PRIM_INTERNAL_PRIME_POS;
+    uint64_t *primes = PRIM_INTERNAL_PRIME_BUF;
     PRIM_INTERNAL_PRIME_BUF = backup_buf;
     PRIM_INTERNAL_PRIME_POS = backup_pos;
 
