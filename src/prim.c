@@ -206,6 +206,10 @@ end:
 }
 
 void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
+    if (max < 2) {
+        return;
+    }
+
     size_t limit = sqrt((double) max) + 1;
     size_t len_sp = 0;
     uint64_t *small_primes = prime_sieve(limit, &len_sp);
@@ -267,6 +271,11 @@ void segmented_sieve(uint64_t max, void(*callback)(uint64_t)) {
         }
 
     }
+
+    bitset_free(sieve);
+    free(small_primes);
+    free(sieve_primes);
+    free(offsets);
 }
 
 /*
