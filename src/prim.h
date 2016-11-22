@@ -12,13 +12,6 @@
 #define PRIM_VERSION "0.1"
 
 /*
- * Set the callback function used for errors. This must be a 
- * function that takes a single argument of _char*_ (representing the
- * error string), and returns void.
- */
-void set_prim_error_callback(void (*callback)(char*));
-
-/*
  * High-level prime sieve. Sieves all primes in [1, _max_] into a new
  * _uint64_t*_, which is returned. The length of the resulting array is
  * stored in _len_.
@@ -55,5 +48,12 @@ uint64_t* eratosthenes(uint64_t max, size_t *len);
  * Does not do anything except stop executing on failure.
  */
 void segmented_sieve(uint64_t max, void(*callback)(uint64_t));
+
+/*
+ * Set the callback function used for errors. This must be a 
+ * function that takes a single argument of _char*_ (representing the
+ * error string), and returns void.
+ */
+void set_prim_error_callback(void (*callback)(char*));
 
 #endif
