@@ -51,7 +51,6 @@ void set_prim_error_callback(void (*callback)(char*));
 ```
 
 See `src/prim.h` for more information.
-```
 
 ## CLI
 
