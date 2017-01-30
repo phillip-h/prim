@@ -105,7 +105,7 @@ char* parse_sep(const char *str) {
  *  callback for segmented_sieve()
  */
 void print_prime(uint64_t prime) {
-    printf("%zu%s", prime, sep);
+    printf("%lld%s", (long long) prime, sep);
 }
 
 void help(void) {

@@ -141,7 +141,7 @@ void p_array(uint64_t *data, size_t len) {
     printf("[");
     for (size_t i = 0; i < len; ++i) {
         if (i != 0) printf(", ");
-        printf("%zu", data[i]);
+        printf("%lld", (long long) data[i]);
     }
     printf("]");
 }
